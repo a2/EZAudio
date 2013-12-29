@@ -39,7 +39,6 @@
 @end
 
 @implementation EZAudioPlot
-@synthesize backgroundColor = _backgroundColor;
 @synthesize color           = _color;
 @synthesize gain            = _gain;
 @synthesize plotType        = _plotType;
@@ -77,10 +76,8 @@
   
 -(void)initPlot {
 #if TARGET_OS_IPHONE
-  self.backgroundColor = [UIColor blackColor];
   self.color           = [UIColor colorWithHue:0 saturation:1.0 brightness:1.0 alpha:1.0];
 #elif TARGET_OS_MAC
-  self.backgroundColor = [NSColor blackColor];
   self.color           = [NSColor colorWithCalibratedHue:0 saturation:1.0 brightness:1.0 alpha:1.0];
 #endif
   self.gain            = 1.0;
@@ -90,10 +87,6 @@
 }
   
 #pragma mark - Setters
--(void)setBackgroundColor:(id)backgroundColor {
-  _backgroundColor = backgroundColor;
-  [self _refreshDisplay];
-}
   
 -(void)setColor:(id)color {
   _color = color;
@@ -204,28 +197,17 @@
 - (void)drawRect:(CGRect)rect
 {
   CGContextRef ctx = UIGraphicsGetCurrentContext();
-  CGContextSaveGState(ctx);
   CGRect frame = self.bounds;
 #elif TARGET_OS_MAC
   - (void)drawRect:(NSRect)dirtyRect
   {
-    [[NSGraphicsContext currentContext] saveGraphicsState];
     NSGraphicsContext * nsGraphicsContext = [NSGraphicsContext currentContext];
     CGContextRef ctx = (CGContextRef) [nsGraphicsContext graphicsPort];
     NSRect frame = self.bounds;
 #endif
     
-#if TARGET_OS_IPHONE
-    // Set the background color
-    [(UIColor*)self.backgroundColor set];
-    UIRectFill(frame);
-    // Set the waveform line color
-    [(UIColor*)self.color set];
-#elif TARGET_OS_MAC
-    [(NSColor*)self.backgroundColor set];
-    NSRectFill(frame);
-    [(NSColor*)self.color set];
-#endif
+    CGContextClearRect(ctx, frame);
+    CGContextSetFillColorWithColor(ctx, [self.color CGColor]);
     
     if(_sampleLength > 0) {
       CGMutablePathRef halfPath = CGPathCreateMutable();
@@ -272,12 +254,6 @@
       }
       CGPathRelease(path);
     }
-    
-#if TARGET_OS_IPHONE
-    CGContextRestoreGState(ctx);
-#elif TARGET_OS_MAC
-    [[NSGraphicsContext currentContext] restoreGraphicsState];
-#endif
   }
     
 -(void)dealloc {
